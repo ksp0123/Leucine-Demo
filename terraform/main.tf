@@ -116,9 +116,9 @@ data "aws_eks_cluster" "certificate_authority" {
   name =  module.eks.cluster_name
 }
 
-locals {
-  kubeconfig_file_name = "kubeconfig_${module.eks.cluster_name}"
-}
+# locals {
+#   kubeconfig_file_name = "kubeconfig_${module.eks.cluster_name}"
+# }
 
 # provider "kubernetes" {
 #   host                   = data.aws_eks_cluster.example.endpoint
@@ -126,15 +126,15 @@ locals {
 #   token                  = data.aws_eks_cluster_auth.example.token
 # }
 
-resource "local_file" "kubeconfig" {
-  content = templatefile("templates/kubeconfig.tpl", {
-    endpoint      = module.eks.cluster_endpoint
-    cluster_name  = module.eks.cluster_name
-    cluster_ca_certificate = base64decode(data.aws_eks_cluster.certificate_authority.certificate_authority[0].data)
-    token         = data.aws_eks_cluster_auth.auth.token
-  })
-  filename = "kubeconfig_${module.eks.cluster_name}"
-}
+# resource "local_file" "kubeconfig" {
+#   content = templatefile("templates/kubeconfig.tpl", {
+#     endpoint      = module.eks.cluster_endpoint
+#     cluster_name  = module.eks.cluster_name
+#     cluster_ca_certificate = base64decode(data.aws_eks_cluster.certificate_authority.certificate_authority[0].data)
+#     token         = data.aws_eks_cluster_auth.auth.token
+#   })
+#   filename = "kubeconfig_${module.eks.cluster_name}"
+# }
 
 
 
