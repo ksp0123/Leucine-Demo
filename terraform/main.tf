@@ -114,7 +114,7 @@ data "aws_eks_cluster_auth" "auth" {
 }
 
 locals {
-  kubeconfig_file_name = "kubeconfig_${module.eks.cluster_name}"
+  kubeconfig_file_name = "kubeconfig"
 }
 
 resource "null_resource" "save_kubeconfig" {
