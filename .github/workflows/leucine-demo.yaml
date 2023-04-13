@@ -54,9 +54,8 @@ jobs:
       
       - name: Set GitHub Actions variable
         run: |
-           echo "::set-output name=CLUSTER_NAME::$(terraform output -raw cluster_name)"  
+          echo "::set-output name=CLUSTER_NAME::$(terraform output -raw cluster_name)"  
           aws eks update-kubeconfig --name ${{ env.CLUSTER_NAME}}
-          # export KUBECONFIG=kubeconfig.yaml
           kubectl get node
 
       - name: Build app
