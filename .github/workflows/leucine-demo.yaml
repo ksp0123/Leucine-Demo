@@ -1,6 +1,6 @@
 name: Java Maven Leucine Demo App CI
 
-on: [push]
+on: 
   workflow_dispatch:
     inputs:
       environment:
@@ -48,9 +48,9 @@ jobs:
         export K8S_CLUSTER_URL=$(terraform output cluster_url)
         export REPO_USER=$(terraform output ecr_user_name)
         export REPO_PWD=$(terraform output ecr_user_password)
-        export CLUSTER_NAME=$(terraform output cluster_name)
+        echo "CLUSTER_NAME=$(terraform output cluster_name)"  >> $GITHUB_ENV
         echo ${{env.CLUSTER_NAME }}  
-        aws eks update-kubeconfig --name education-eks-Q3Gl96lt
+        aws eks update-kubeconfig --name ${CLUSTER_NAME}
         # export KUBECONFIG=kubeconfig.yaml
         kubectl get node
 
