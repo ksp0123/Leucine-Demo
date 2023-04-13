@@ -46,13 +46,7 @@ jobs:
           terraform init
           terraform apply --auto-approve
           export DOCKER_REPO_URL=$(terraform output repo_url)
-          export K8S_CLUSTER_URL=$(terraform output cluster_url)
-          export REPO_USER=$(terraform output ecr_user_name)
-          export REPO_PWD=$(terraform output ecr_user_password)
-          echo "CLUSTER_NAME=$(terraform output cluster_name)"  >> $GITHUB_ENV
-          echo "${{ env.CLUSTER_NAME}}"
-          # aws eks update-kubeconfig --name ${{env.CLUSTER_NAME}}
-          # export KUBECONFIG=kubeconfig.yaml
+          aws eks update-kubeconfig --name education-eks-Q3Gl96lt
           kubectl get node
 
       - name: Build app
@@ -78,12 +72,22 @@ jobs:
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/
 
-      - name: Deploy
+      - name: Request approval
+        if: github.event.inputs.environment == 'dev' || github.event.inputs.environment == 'QA'
+        uses: peter-evans/wait-on-approvals@v2
+        with:
+          github-token: ${{ secrets.SECRET_TOKEN }}
+          approvals: 1
+          approval-comment: Please approve the deployment to ${{ github.event.inputs.environment }} environment with image tag ${{ github.event.inputs.image_tag }}
+
+      - name: Deploy to ${environment}
+        if: github.event.inputs.environment == 'dev' || github.event.inputs.environment == 'QA' && github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
         env:
           APP_NAME: java-maven-app
         run: |
-          envsubst < kubernetes/deployment.yaml | kubectl apply -f -
-          envsubst < kubernetes/service.yaml | kubectl apply -f -
+          envsubst < kubernetes/${{ github.event.inputs.environment }}/deployment.yaml | kubectl apply -f -
+          envsubst < kubernetes/${{ github.event.inputs.environment }}/service.yaml | kubectl apply -f -
+
       
     # - name: Build Docker image
     #   run: |
