@@ -44,7 +44,7 @@ jobs:
       - name: Unit Test
         run: mvn test
       
-      - name: Unit Test
+      - name: Itegration Test
         run: mvn verify -DskipUnitTests
 
       - name: Login to ECR
@@ -57,42 +57,43 @@ jobs:
 
       - name: Fetch Service Version
         run: echo "service_version=$(awk "/java-maven-app/{getline;print;}" pom.xml | awk -F '[><]' '{print $3}')" >> $GITHUB_ENV
-
+      
+      - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
           context: .
           push: true
           tags: 856190518830.dkr.ecr.us-east-2.amazonaws.com/myapp:${{ service_version }}
     
-  # deploy:
-  #   runs-on: ubuntu-latest
-  #   inputs:
-  #     environment:
-  #       description: 'Target environment (e.g., dev, QA)'
-  #       required: true
-  #     image_tag:
-  #       description: 'Image tag or release version'
-  #       required: true
-  #   steps:
-  #     - name: Install kubectl
-  #       run: |
-  #         curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-  #         chmod +x kubectl
-  #         sudo mv kubectl /usr/local/bin/
+  deploy:
+    runs-on: ubuntu-latest
+    inputs:
+      environment:
+        description: 'Target environment (e.g., dev, QA)'
+        required: true
+      image_tag:
+        description: 'Image tag or release version'
+        required: true
+    steps:
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
 
-  #     - name: Request approval
-  #       if: github.event.inputs.environment == 'dev' || github.event.inputs.environment == 'QA'
-  #       uses: trstringer/manual-approval@v1
-  #       with:
-  #         secret: ${{ secrets.SECRET_TOKEN }}
-  #         approvers: ksp0123
-  #         approval-comment: Please approve the deployment to ${{ github.event.inputs.environment }} environment with image tag ${{ github.event.inputs.image_tag }}
+      - name: Request approval
+        if: github.event.inputs.environment == 'dev' || github.event.inputs.environment == 'QA'
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ secrets.SECRET_TOKEN }}
+          approvers: ksp0123
+          approval-comment: Please approve the deployment to ${{ github.event.inputs.environment }} environment with image tag ${{ github.event.inputs.image_tag }}
 
-  #     - name: Deploy to ${environment}
-  #       if: github.event.inputs.environment == 'dev' || github.event.inputs.environment == 'QA' && github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
-  #       env:
-  #         APP_NAME: java-maven-app
-  #         image_tag: ${{ github.event.inputs.image_tag }}
-  #       run: |
-  #         envsubst < kubernetes/${{ github.event.inputs.environment }}/deployment.yaml | kubectl apply -f -
-  #         envsubst < kubernetes/${{ github.event.inputs.environment }}/service.yaml | kubectl apply -f -
+      - name: Deploy to ${environment}
+        if: github.event.inputs.environment == 'dev' || github.event.inputs.environment == 'QA' && github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
+        env:
+          APP_NAME: java-maven-app
+          image_tag: ${{ github.event.inputs.image_tag }}
+        run: |
+          envsubst < kubernetes/${{ github.event.inputs.environment }}/deployment.yaml | kubectl apply -f -
+          envsubst < kubernetes/${{ github.event.inputs.environment }}/service.yaml | kubectl apply -f -
