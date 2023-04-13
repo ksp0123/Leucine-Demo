@@ -32,16 +32,15 @@ jobs:
         TF_VAR_env_prefix: test
         TF_VAR_k8s_version: 1.18
       run: |
-        cd terraform
-        echo "creating ECR repository and EKS cluster"
-        terraform init
-        terraform apply --auto-approve
-        export DOCKER_REPO_URL=$(terraform output repo_url)
-        export K8S_CLUSTER_URL=$(terraform output cluster_url)
-        export REPO_USER=$(terraform output ecr_user_name)
-        export REPO_PWD=$(terraform output ecr_user_password)
+        docker run -v ${PWD}/terraform:/app -w /app hashicorp/terraform:0.11.14 init
+        docker run -v ${PWD}/terraform:/app -w /app hashicorp/terraform:0.11.14 apply --auto-approve
+        export DOCKER_REPO_URL=$(docker run -v ${PWD}/terraform:/app -w /app hashicorp/terraform:0.11.14 output repo_url)
+        export K8S_CLUSTER_URL=$(docker run -v ${PWD}/terraform:/app -w /app hashicorp/terraform:0.11.14 output cluster_url)
+        export REPO_USER=$(docker run -v ${PWD}/terraform:/app -w /app hashicorp/terraform:0.11.14 output ecr_user_name)
+        export REPO_PWD=$(docker run -v ${PWD}/terraform:/app -w /app hashicorp/terraform:0.11.14 output ecr_user_password)
         export KUBECONFIG=terraform/kubeconfig.yaml
         kubectl get node
+
       
     # - name: Increment version
     #   run: |
