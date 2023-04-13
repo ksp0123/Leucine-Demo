@@ -4,6 +4,7 @@ metadata:
   name: ${APP_NAME}
   labels:
     app: ${APP_NAME}
+  namespace: dev
 spec:
   replicas: 1
   selector:
@@ -18,7 +19,7 @@ spec:
         - name: aws-registry-key
       containers:
         - name: ${APP_NAME}
-          image: nginx:latest
+          image:  856190518830.dkr.ecr.us-east-2.amazonaws.com/myapp:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
