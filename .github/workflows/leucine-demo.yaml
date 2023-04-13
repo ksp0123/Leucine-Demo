@@ -1,6 +1,15 @@
 name: Java Maven Leucine Demo App CI
 
-on: [push]
+on:
+ workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment (e.g., dev, QA)'
+        required: true
+      image_tag:
+        description: 'Image tag or release version'
+        required: true
+    
 
 jobs:
   build:
@@ -68,13 +77,6 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    inputs:
-      environment:
-        description: 'Target environment (e.g., dev, QA)'
-        required: true
-      image_tag:
-        description: 'Image tag or release version'
-        required: true
     steps:
       - name: Install kubectl
         run: |
