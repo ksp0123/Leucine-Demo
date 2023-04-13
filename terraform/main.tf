@@ -121,7 +121,7 @@ resource "null_resource" "save_kubeconfig" {
   depends_on = [data.aws_eks_cluster_auth.auth]
 
   provisioner "local-exec" {
-    command = "echo '${data.aws_eks_cluster_auth.auth.token}' | sed 's|server:.*|server: ${module.eks.cluster_endpoint}|g' > ${local.kubeconfig_file_name}"
+    command = "echo '${data.aws_eks_cluster_auth.auth.token}' | sed 's|server:.*|server: ${module.eks.cluster_endpoint}|g' > kubeconfig"
   }
 }
 
