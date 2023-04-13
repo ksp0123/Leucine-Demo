@@ -66,6 +66,7 @@ jobs:
           tags: 856190518830.dkr.ecr.us-east-2.amazonaws.com/myapp:${{ service_version }}
     
   deploy:
+    needs: build
     runs-on: ubuntu-latest
     inputs:
       environment:
