@@ -50,7 +50,7 @@ jobs:
           export REPO_USER=$(terraform output ecr_user_name)
           export REPO_PWD=$(terraform output ecr_user_password)
           echo "CLUSTER_NAME=$(terraform-bin output cluster_name)"  >> $GITHUB_ENV
-          echo ${{CLUSTER_NAME}}
+          echo "${{ env.CLUSTER_NAME}}""
           # aws eks update-kubeconfig --name ${{env.CLUSTER_NAME}}
           # export KUBECONFIG=kubeconfig.yaml
           kubectl get node
