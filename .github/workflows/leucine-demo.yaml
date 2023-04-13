@@ -40,7 +40,7 @@ jobs:
         export K8S_CLUSTER_URL=$(terraform output cluster_url)
         export REPO_USER=$(terraform output ecr_user_name)
         export REPO_PWD=$(terraform output ecr_user_password)
-        export KUBECONFIG=kubeconfig.yaml
+        # export KUBECONFIG=kubeconfig.yaml
         kubectl get node
 
     - name: Build app
