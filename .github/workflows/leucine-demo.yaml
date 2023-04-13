@@ -1,6 +1,18 @@
 name: Java Maven Leucine Demo App CI
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
+
+inputs:
+  environment:
+    description: 'The environment to deploy the image to.'
+    required: true
+    default: 'dev'
+  tag:
+    description: 'The Docker image tag to deploy.'
+    required: true
 
 jobs:
   build:
@@ -62,21 +74,27 @@ jobs:
       with:
         context: .
         push: true
-        tags: 856190518830.dkr.ecr.us-east-2.amazonaws.com/myapp:latest
+        tags: 856190518830.dkr.ecr.us-east-2.amazonaws.com/myapp:${{ inputs.tag }}
+    
+    - name: Prompt for Approval
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      id: approval
+      uses: brunoscheufler/github-action-approve@v1
+      with:
+        message: "Do you approve deploying the image to ${{ inputs.environment }}?"
+
     - name: Install kubectl
       run: |
         curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
         chmod +x kubectl
-        sudo mv kubectl /usr/local/bin/
-
-    - name: Deploy
+  deploy:
+    needs: build
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.approval.outputs.approved == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy app to Kubernetes
       env:
         APP_NAME: java-maven-app
       run: |
         envsubst < kubernetes/deployment.yaml | kubectl apply -f -
         envsubst < kubernetes/service.yaml | kubectl apply -f -
-      
-    # - name: Build Docker image
-    #   run: |
-    #     echo "building the docker image..."
-    #     docker build -t ${{ env.DOCKER_REPO_URL }}:${{ env.IMAGE_NAME }} .
