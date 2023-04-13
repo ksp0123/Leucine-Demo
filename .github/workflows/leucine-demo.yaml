@@ -28,9 +28,9 @@ jobs:
         sudo apt-get update && sudo apt-get install terraform
       
     - name: Provision cluster
-      env:
-        TF_VAR_env_prefix: test
-        TF_VAR_k8s_version: 1.18
+      # env:
+      #   # TF_VAR_env_prefix: test
+      #   # TF_VAR_k8s_version: 1.18
       run: |
         cd terraform
         echo "creating ECR repository and EKS cluster"
@@ -40,13 +40,13 @@ jobs:
         export K8S_CLUSTER_URL=$(terraform output cluster_url)
         export REPO_USER=$(terraform output ecr_user_name)
         export REPO_PWD=$(terraform output ecr_user_password)
-        export KUBECONFIG=terraform/kubeconfig.yaml
+        export KUBECONFIG=kubeconfig.yaml
         kubectl get node
 
     - name: Build app
       run: mvn clean package
       
-    - name: Build Docker image
-      run: |
-        echo "building the docker image..."
-        docker build -t ${{ env.DOCKER_REPO_URL }}:${{ env.IMAGE_NAME }} .
+    # - name: Build Docker image
+    #   run: |
+    #     echo "building the docker image..."
+    #     docker build -t ${{ env.DOCKER_REPO_URL }}:${{ env.IMAGE_NAME }} .
