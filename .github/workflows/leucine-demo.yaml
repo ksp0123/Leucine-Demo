@@ -45,16 +45,11 @@ jobs:
           echo "creating ECR repository and EKS cluster"
           terraform init
           terraform apply --auto-approve
-          export DOCKER_REPO_URL=$(terraform output repo_url)
-          export K8S_CLUSTER_URL=$(terraform output cluster_url)
-          export REPO_USER=$(terraform output ecr_user_name)
-          export REPO_PWD=$(terraform output ecr_user_password)
-          echo "CLUSTER_NAME=$(terraform output cluster_name)"  >> $GITHUB_ENV
-          echo ${CLUSTER_NAME}
       
       - name: Set GitHub Actions variable
         run: |
-          echo "::set-output name=CLUSTER_NAME::$(terraform output -raw cluster_name)"  
+          echo "::set-output name=CLUSTER_NAME::$(terraform output -raw cluster_name)" 
+          echo "::set-output name=DOCKER_REPO_URL::$(terraform output -raw repo_url)"
           aws eks update-kubeconfig --name ${{ env.CLUSTER_NAME}}
           kubectl get node
 
@@ -74,7 +69,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: 856190518830.dkr.ecr.us-east-2.amazonaws.com/myapp:latest
+          tags: ${{ env.DOCKER_REPO_URL }}:latest
       - name: Install kubectl
         run: |
           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
