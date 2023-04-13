@@ -19,7 +19,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.aws_access_key_id }}
         aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
-        aws-region: us-east-1
+        aws-region: us-east-2
       
     - name: Install Terraform
       run: |
@@ -40,6 +40,7 @@ jobs:
         export K8S_CLUSTER_URL=$(terraform output cluster_url)
         export REPO_USER=$(terraform output ecr_user_name)
         export REPO_PWD=$(terraform output ecr_user_password)
+        export CLUSTER_NAME=$(terraform output cluster_name)
         aws eks update-kubeconfig --name education-eks-Q3Gl96lt
         # export KUBECONFIG=kubeconfig.yaml
         kubectl get node
