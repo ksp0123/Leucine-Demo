@@ -53,7 +53,7 @@ jobs:
       - name: Unit Test
         run: mvn test
       
-      - name: Itegration Test
+      - name: Integration Test
         run: mvn verify -DskipUnitTests
 
       - name: Login to ECR
@@ -72,7 +72,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: 856190518830.dkr.ecr.us-east-2.amazonaws.com/myapp:${ service_version }
+          tags: 856190518830.dkr.ecr.us-east-2.amazonaws.com/myapp:${service_version}
     
   deploy:
     needs: build
@@ -92,7 +92,7 @@ jobs:
           approvers: ksp0123
           approval-comment: Please approve the deployment to ${{ github.event.inputs.environment }} environment with image tag ${{ github.event.inputs.image_tag }}
 
-      - name: Deploy to ${environment}
+      - name: Deploy to ${{ github.event.inputs.environment }}
         if: github.event.inputs.environment == 'dev' || github.event.inputs.environment == 'QA' && github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
         env:
           APP_NAME: java-maven-app
