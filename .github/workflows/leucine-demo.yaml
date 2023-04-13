@@ -40,7 +40,7 @@ jobs:
         export K8S_CLUSTER_URL=$(terraform output cluster_url)
         export REPO_USER=$(terraform output ecr_user_name)
         export REPO_PWD=$(terraform output ecr_user_password)
-        aws eks update-kubeconfig --name $(terraform output cluster_name)
+        aws eks update-kubeconfig --name education-eks-Q3Gl96lt
         # export KUBECONFIG=kubeconfig.yaml
         kubectl get node
 
