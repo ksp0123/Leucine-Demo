@@ -63,12 +63,12 @@ jobs:
         context: .
         push: true
         tags: 856190518830.dkr.ecr.us-east-2.amazonaws.com/myapp:latest
-   - name: Install kubectl
-     run: |
-      curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-      chmod +x kubectl
-      sudo mv kubectl /usr/local/bin/
-      
+    - name: Install kubectl
+      run: |
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/
+
     - name: Deploy
       env:
         APP_NAME: java-maven-app
