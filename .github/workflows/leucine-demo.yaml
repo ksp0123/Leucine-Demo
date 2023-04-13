@@ -42,3 +42,11 @@ jobs:
         export REPO_PWD=$(terraform output ecr_user_password)
         export KUBECONFIG=terraform/kubeconfig.yaml
         kubectl get node
+
+    - name: Build app
+      run: mvn clean package
+      
+    - name: Build Docker image
+      run: |
+        echo "building the docker image..."
+        docker build -t ${{ env.DOCKER_REPO_URL }}:${{ env.IMAGE_NAME }} .
