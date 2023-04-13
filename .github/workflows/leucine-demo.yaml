@@ -15,75 +15,75 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      
-    - name: Set up Java
-      uses: actions/setup-java@v1
-      with:
-        java-version: 11
+      - name: Checkout code
+        uses: actions/checkout@v2
+        
+      - name: Set up Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
 
-    - name: Set up AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.aws_access_key_id }}
-        aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
-        aws-region: us-east-2
-      
-    - name: Install Terraform
-      run: |
-        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-        sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-        sudo apt-get update && sudo apt-get install terraform
-      
-    - name: Provision cluster
-      # env:
-      #   # TF_VAR_env_prefix: test
-      #   # TF_VAR_k8s_version: 1.18
-      run: |
-        cd terraform
-        echo "creating ECR repository and EKS cluster"
-        terraform init
-        terraform apply --auto-approve
-        export DOCKER_REPO_URL=$(terraform output repo_url)
-        export K8S_CLUSTER_URL=$(terraform output cluster_url)
-        export REPO_USER=$(terraform output ecr_user_name)
-        export REPO_PWD=$(terraform output ecr_user_password)
-        echo "CLUSTER_NAME=$(terraform output cluster_name)"  >> $GITHUB_ENV
-        echo ${{env.CLUSTER_NAME }}  
-        aws eks update-kubeconfig --name ${CLUSTER_NAME}
-        # export KUBECONFIG=kubeconfig.yaml
-        kubectl get node
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+          aws-region: us-east-2
+        
+      - name: Install Terraform
+        run: |
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+          sudo apt-get update && sudo apt-get install terraform
+        
+      - name: Provision cluster
+        # env:
+        #   # TF_VAR_env_prefix: test
+        #   # TF_VAR_k8s_version: 1.18
+        run: |
+          cd terraform
+          echo "creating ECR repository and EKS cluster"
+          terraform init
+          terraform apply --auto-approve
+          export DOCKER_REPO_URL=$(terraform output repo_url)
+          export K8S_CLUSTER_URL=$(terraform output cluster_url)
+          export REPO_USER=$(terraform output ecr_user_name)
+          export REPO_PWD=$(terraform output ecr_user_password)
+          echo "CLUSTER_NAME=$(terraform output cluster_name)"  >> $GITHUB_ENV
+          echo ${{env.CLUSTER_NAME }}  
+          aws eks update-kubeconfig --name ${CLUSTER_NAME}
+          # export KUBECONFIG=kubeconfig.yaml
+          kubectl get node
 
-    - name: Build app
-      run: mvn clean package
+      - name: Build app
+        run: mvn clean package
 
-    - name: Login to ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-      with:
-        registry: ${{ env.DOCKER_REPO_URL }}
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          registry: ${{ env.DOCKER_REPO_URL }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        push: true
-        tags: 856190518830.dkr.ecr.us-east-2.amazonaws.com/myapp:latest
-    - name: Install kubectl
-     run: |
-      curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-      chmod +x kubectl
-      sudo mv kubectl /usr/local/bin/
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: 856190518830.dkr.ecr.us-east-2.amazonaws.com/myapp:latest
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
 
-  - name: Deploy
-    env:
-      APP_NAME: java-maven-app
-    run: |
-      envsubst < kubernetes/deployment.yaml | kubectl apply -f -
-      envsubst < kubernetes/service.yaml | kubectl apply -f -
+      - name: Deploy
+        env:
+          APP_NAME: java-maven-app
+        run: |
+          envsubst < kubernetes/deployment.yaml | kubectl apply -f -
+          envsubst < kubernetes/service.yaml | kubectl apply -f -
       
     # - name: Build Docker image
     #   run: |
