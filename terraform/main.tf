@@ -125,8 +125,8 @@ resource "null_resource" "save_kubeconfig" {
   }
 }
 
-data "local_file" "kubeconfig" {
-  filename = "kubeconfig"
-  depends_on = [null_resource.save_kubeconfig]
-  content = null
-}
+# data "local_file" "kubeconfig" {
+#   filename = "kubeconfig"
+#   depends_on = [null_resource.save_kubeconfig]
+#   content = null
+# }
