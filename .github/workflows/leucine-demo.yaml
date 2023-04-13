@@ -1,14 +1,9 @@
 name: Java Maven Leucine Demo App CI
 
-on: 
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Target environment (e.g., dev, QA)'
-        required: true
-      image_tag:
-        description: 'Image tag or release version'
-        required: true
+on:
+  push
+    branches:
+      - main
 
 jobs:
   build:
@@ -63,14 +58,25 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: Build and push Docker image
-        env:
-          image_tag: ${{ github.event.inputs.image_tag }}
+      - name: Fetch Service Version
+        run: echo "service_version=$(awk "/java-maven-app/{getline;print;}" pom.xml | awk -F '[><]' '{print $3}')" >> $GITHUB_ENV
+
         uses: docker/build-push-action@v2
         with:
           context: .
           push: true
-          tags: 856190518830.dkr.ecr.us-east-2.amazonaws.com/myapp:${{ image_tag }}
+          tags: 856190518830.dkr.ecr.us-east-2.amazonaws.com/myapp:${{ service_version }}
+    
+  deploy:
+    runs-on: ubuntu-latest
+    inputs:
+      environment:
+        description: 'Target environment (e.g., dev, QA)'
+        required: true
+      image_tag:
+        description: 'Image tag or release version'
+        required: true
+    steps:
       - name: Install kubectl
         run: |
           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
