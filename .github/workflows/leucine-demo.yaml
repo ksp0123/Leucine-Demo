@@ -74,10 +74,10 @@ jobs:
 
       - name: Request approval
         if: github.event.inputs.environment == 'dev' || github.event.inputs.environment == 'QA'
-        uses: peter-evans/wait-on-approvals@v2
+        uses: trstringer/manual-approval@v1
         with:
-          github-token: ${{ secrets.SECRET_TOKEN }}
-          approvals: 1
+          secret: ${{ secrets.SECRET_TOKEN }}
+          approvers: ksp0123
           approval-comment: Please approve the deployment to ${{ github.event.inputs.environment }} environment with image tag ${{ github.event.inputs.image_tag }}
 
       - name: Deploy to ${environment}
