@@ -1,0 +1,70 @@
+name: Java Maven Leucine Demo App CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    - name: Set up Java
+      uses: actions/setup-java@v1
+      with:
+        java-version: 11
+
+    - name: Set up AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.aws_access_key_id }}
+        aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+        aws-region: us-east-1
+
+    # - name: Set up Docker
+    #   uses: docker/login-action@v1
+    #   with:
+    #     username: ${{ secrets.ecr_user_name }}
+    #     password: ${{ secrets.ecr_user_password }}
+      
+    - name: Provision cluster
+      env:
+        TF_VAR_env_prefix: test
+        TF_VAR_k8s_version: 1.18
+      run: |
+        cd terraform
+        echo "creating ECR repository and EKS cluster"
+        terraform init
+        terraform apply --auto-approve
+        export DOCKER_REPO_URL=$(terraform output repo_url)
+        export K8S_CLUSTER_URL=$(terraform output cluster_url)
+        export REPO_USER=$(terraform output ecr_user_name)
+        export REPO_PWD=$(terraform output ecr_user_password)
+        export KUBECONFIG=terraform/kubeconfig.yaml
+        kubectl get node
+      
+    # - name: Increment version
+    #   run: |
+    #     echo 'incrementing app version...'
+    #     mvn build-helper:parse-version versions:set \
+    #       -DnewVersion=${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.nextIncrementalVersion} \
+    #       versions:commit
+    #     VERSION=$(xmllint --xpath '/*[local-name()="project"]/*[local-name()="version"]/text()' pom.xml)-${{ github.run_number }}
+    #     echo "::set-env name=IMAGE_NAME::${VERSION}"
+      
+    # - name: Build app
+    #   run: mvn clean package
+      
+    # - name: Build Docker image
+    #   run: |
+    #     echo "building the docker image..."
+    #     docker build -t ${{ env.DOCKER_REPO_URL }}:${{ env.IMAGE_NAME }} .
+    #     docker push ${{ env.DOCKER_REPO_URL }}:${{ env.IMAGE_NAME }}
+      
+    # - name: Deploy
+    #   env:
+    #     APP_NAME: java-maven-app
+    #   run: |
+    #     envsubst < kubernetes/deployment.yaml | kubectl apply -f -
+    #     envsubst < kubernetes/service.yaml | kubectl apply -f -
+
