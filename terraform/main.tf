@@ -112,21 +112,31 @@ resource "aws_eks_addon" "ebs-csi" {
 data "aws_eks_cluster_auth" "auth" {
   name = module.eks.cluster_name
 }
+data "aws_eks_cluster" "certificate_authority" {
+  name =  module.eks.cluster_name
+}
 
 locals {
-  kubeconfig_file_name = "kubeconfig.yaml"
+  kubeconfig_file_name = "kubeconfig_${module.eks.cluster_name}"
 }
 
-resource "null_resource" "save_kubeconfig" {
-  depends_on = [data.aws_eks_cluster_auth.auth]
-
-  provisioner "local-exec" {
-    command = "echo '${data.aws_eks_cluster_auth.auth.token}' | sed 's|server:.*|server: ${module.eks.cluster_endpoint}|g' > kubeconfig.yaml"
-  }
-}
-
-# data "local_file" "kubeconfig" {
-#   filename = "kubeconfig"
-#   depends_on = [null_resource.save_kubeconfig]
-#   content = null
+# provider "kubernetes" {
+#   host                   = data.aws_eks_cluster.example.endpoint
+#   cluster_ca_certificate = base64decode(data.aws_eks_cluster.example.certificate_authority[0].data)
+#   token                  = data.aws_eks_cluster_auth.example.token
 # }
+
+resource "local_file" "kubeconfig" {
+  content = templatefile("templates/kubeconfig.tpl", {
+    endpoint      = module.eks.cluster_endpoint
+    cluster_name  = module.eks.cluster_name
+    cluster_ca_certificate = base64decode(data.aws_eks_cluster.certificate_authority.certificate_authority[0].data)
+    token         = data.aws_eks_cluster_auth.auth.token
+  })
+  filename = "kubeconfig_${module.eks.cluster_name}"
+}
+
+
+
+
+
